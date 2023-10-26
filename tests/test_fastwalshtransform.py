@@ -1,25 +1,28 @@
+"""
+Testing the fast Walsh transform
+"""
+import pytest
 import numpy as np
-import sys
-sys.path.append('../')
-from freyja import fastwalshtransform #with __init__.py
-#from freyja.fastwalshtransform import fastwalshtransform
+
+from freyja import fast_walsh_transform
 
 
-def test_fastwalshtransform_1():
+@pytest.mark.parametrize(
+    "test_input, expected", [(np.array([1, 2, 3, 4]), np.array([5, -2, 0, -1]))]
+)
+def test_fastwalshtransform(test_input, expected):
     """
     Transforms a vector and compares it to known transformation.
     """
-    x=np.array([1,2,3,4])
-    y=np.array([5,-2,0,-1])
-    z=fastwalshtransform(x)
-    np.testing.assert_array_equal(y, z)
+    z = fast_walsh_transform(test_input)
+    np.testing.assert_array_equal(expected, z)
 
 
-def test_fastwalshtransform_2():
+def test_fastwalshtransform_back_and_forth():
     """
     Foward and backward transformation of a random vector.
     """
-    x=np.random.rand(32)
-    y=fastwalshtransform(x)
-    z=fastwalshtransform(y)
+    x = np.random.rand(32)
+    y = fast_walsh_transform(x)
+    z = fast_walsh_transform(y)
     np.testing.assert_allclose(x, z)

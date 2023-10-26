@@ -1,49 +1,69 @@
 import numpy as np
 
-def ispoweroftwo(num):
+
+def is_power_of_two(num):
     """
     Check if num is power of 2
     """
     return num > 0 and ((num & (num - 1)) == 0)
 
 
-def ceilpoweroftwo(num):
+def ceil_power_of_two(num):
     """
     Rounds num up to the next power of 2
     """
     x = 1
-    while(x < num):
+    while x < num:
         x *= 2
 
     return x
 
 
-def fastwalshtransform(x):
+def fast_walsh_transform(x: np.ndarray, normalize: bool = True) -> np.ndarray:
     """
-    Peforms the fast Walsh transform on the input signal
-    and returns the Walsh coefficients,
+    Peform the fast Walsh transform on the input signal
+    and return the Walsh coefficients,
     see Beer, Am. J. Phys 49 (1981).
-    x: input signal
-    N: fwt size
-    returns z: Walsh coefficients
+
+    Parameters
+    ----------
+    x: np.ndarray
+        The input signal to be transformed. Will be zero padded if length is not a power of two.
+    normalize: bool
+        Whether to devide the transform by the square root of the zero-padded signal length.
+        Defaults to True.
+
+    Return
+    ------
+    np.ndarray
+        The Walsh transform of the input signal.
     """
-    N = x.size
+    shape = x.shape
+    length = shape[-1]
+    x_copy = x.copy()
     # Check if N is a power of 2
-    if not(ispoweroftwo(N)):
-        N = ceilpoweroftwo(N)
+    if not is_power_of_two(shape[-1]):
+        length = ceil_power_of_two(shape[-1])
 
-    dN = N - x.size
-    x = np.append(x,np.zeros(dN))
-    z = np.zeros(N)
-    M = 1
+    pad_length = length - shape[-1]
+    z = np.zeros(length)
+    z[..., : length - pad_length] = x_copy[..., :]
+    step = 1
 
-    while M != N:
-        points = range(0, N, 2*M)
-        for i in points:
-            for j in range(2*M):
-                z[i+j] = x[i+(j//2)] + ((-1)**(j+(j//2))) * x[i+(j//2)+M]
+    x_copy[:] = z[:]
 
-        x[:] = z[:]
-        M *= 2
+    while step < length:
+        for i in range(0, length, 2 * step):
+            for j in range(2 * step):
+                z[..., i + j] = (
+                    x_copy[..., i + (j // 2)]
+                    + ((-1) ** (j + (j // 2))) * x_copy[..., i + (j // 2) + step]
+                )
 
-    return z/np.sqrt(N)
+        x_copy[:] = z[:]
+        step *= 2
+
+    if normalize is True:
+        x_copy = x_copy / np.sqrt(length)
+
+    return x_copy
