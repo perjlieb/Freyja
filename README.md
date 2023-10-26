@@ -1,1 +1,1 @@
-My first attempt to implement the fast Walsh transformation in python.
+My first attempt to implement the fast Walsh transformation in Python.
