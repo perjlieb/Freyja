@@ -40,27 +40,27 @@ def fast_walsh_transform(x: np.ndarray, normalize: bool = True) -> np.ndarray:
     """
     shape = x.shape
     length = shape[-1]
-    x_copy = x.copy()
     # Check if N is a power of 2
     if not is_power_of_two(shape[-1]):
         length = ceil_power_of_two(shape[-1])
 
-    z = np.zeros((shape[:-1] + (length,)))
-    z[..., : shape[-1]] = x
+    x_copy = np.zeros((shape[:-1] + (length,)))
+    x_copy[..., : shape[-1]] = x
     step = 1
 
-    x_copy[:] = z[:]
+    a = np.zeros((shape[:-1] + (length,)))
+    b = np.zeros((shape[:-1] + (length,)))
 
     sign = np.asarray([(-1) ** n for n in range(length)])
 
     while step < length:
         for i in range(0, length, 2 * step):
-            a = x_copy[..., i : i + step]
-            b = sign[:step] * x_copy[..., i + step : i + 2 * step]
-            z[..., i : i + 2 * step : 2] = a + b
-            z[..., i + 1 : i + 2 * step : 2] = a - b
+            a[..., i : i + 2 * step] = np.repeat(x_copy[..., i : i + step], 2, axis=-1)
+            b[..., i : i + 2 * step] = np.repeat(
+                sign[:step] * x_copy[..., i + step : i + 2 * step], 2, axis=-1
+            )
+        x_copy = a + sign * b
 
-        x_copy[:] = z[:]
         step *= 2
 
     if normalize is True:
